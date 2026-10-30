@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatYear, formatRating, formatCount, posterUrl } from "../js/format.js";
+import { formatYear, formatRating, formatCount, posterUrl, formatRuntime } from "../js/format.js";
+
+test("formatRuntime em horas e minutos", () => {
+  assert.equal(formatRuntime(130), "2h 10min");
+  assert.equal(formatRuntime(120), "2h");
+  assert.equal(formatRuntime(45), "45min");
+  assert.equal(formatRuntime(0), "");
+  assert.equal(formatRuntime(null), "");
+});
 
 test("formatYear pega o ano da data", () => {
   assert.equal(formatYear("2024-05-01"), "2024");

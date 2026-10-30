@@ -1,4 +1,6 @@
 // Única parte do site que conversa com o TMDB.
+import { formatYear, formatRating, formatRuntime } from "./format.js";
+
 export const API_BASE = "https://api.themoviedb.org/3";
 
 export class ApiError extends Error {
@@ -35,6 +37,29 @@ export function buildDiscoverParams({ providerIds, allProviderIds, genreIds = []
   return params;
 }
 
+function toProvider(p) {
+  return { id: p.provider_id, name: p.provider_name, logoPath: p.logo_path };
+}
+
+// Transforma a resposta de detalhes do TMDB só no que a janela precisa mostrar.
+export function extractDetails(raw) {
+  const trailer = (raw.videos?.results ?? []).find((v) => v.site === "YouTube" && v.type === "Trailer");
+  const flatrate = raw["watch/providers"]?.results?.BR?.flatrate ?? [];
+  return {
+    id: raw.id,
+    title: raw.title,
+    year: formatYear(raw.release_date),
+    rating: formatRating(raw.vote_average, raw.vote_count),
+    runtime: formatRuntime(raw.runtime),
+    genres: (raw.genres ?? []).map((g) => g.name),
+    overview: raw.overview || "Sinopse não disponível em português.",
+    cast: (raw.credits?.cast ?? []).slice(0, 5).map((c) => c.name),
+    trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
+    providers: flatrate.map(toProvider),
+    posterPath: raw.poster_path,
+  };
+}
+
 export function createApi(token, fetchFn = globalThis.fetch) {
   const cleanToken = (token ?? "").trim();
 
@@ -67,7 +92,7 @@ export function createApi(token, fetchFn = globalThis.fetch) {
     const priority = (p) => p.display_priorities?.BR ?? p.display_priority ?? Infinity;
     return [...data.results]
       .sort((a, b) => priority(a) - priority(b))
-      .map((p) => ({ id: p.provider_id, name: p.provider_name, logoPath: p.logo_path }));
+      .map(toProvider);
   }
 
   async function getGenres() {
@@ -79,5 +104,10 @@ export function createApi(token, fetchFn = globalThis.fetch) {
     return request("/discover/movie", buildDiscoverParams(filters));
   }
 
-  return { getProviders, getGenres, discoverMovies };
+  function getMovieDetails(id) {
+    const params = new URLSearchParams({ append_to_response: "credits,videos,watch/providers" });
+    return request(`/movie/${id}`, params);
+  }
+
+  return { getProviders, getGenres, discoverMovies, getMovieDetails };
 }

@@ -95,6 +95,87 @@ export function renderGenres(container, genres, selectedIds) {
   );
 }
 
+// Janela de detalhes: modal = <dialog id="details"> com um #details-body dentro
+function detailsBody(modal) {
+  return modal.querySelector("#details-body");
+}
+
+function openModal(modal) {
+  if (!modal.open) modal.showModal();
+}
+
+export function showDetailsLoading(modal) {
+  detailsBody(modal).replaceChildren(el("p", "muted", "Carregando..."));
+  openModal(modal);
+}
+
+export function showDetailsError(modal) {
+  detailsBody(modal).replaceChildren(el("p", "details-error", "Não foi possível carregar os detalhes."));
+  openModal(modal);
+}
+
+export function openDetails(modal, details) {
+  const layout = el("div", "details-layout");
+
+  const src = posterUrl(details.posterPath);
+  if (src) {
+    const img = el("img", "details-poster");
+    img.src = src;
+    img.alt = `Pôster de ${details.title}`;
+    layout.append(img);
+  } else {
+    layout.append(el("div", "details-poster card-placeholder", details.title));
+  }
+
+  const info = el("div", "details-info");
+  info.append(el("h2", "details-title", details.year ? `${details.title} (${details.year})` : details.title));
+  const meta = [`★ ${details.rating}`, details.runtime, details.genres.join(", ")].filter(Boolean).join(" · ");
+  info.append(el("p", "details-meta", meta));
+  info.append(el("p", "details-overview", details.overview));
+
+  info.append(el("h3", "details-subtitle", "Disponível em:"));
+  if (details.providers.length > 0) {
+    const logos = el("div", "details-providers");
+    for (const p of details.providers) {
+      const logo = posterUrl(p.logoPath, "w92");
+      if (logo) {
+        const img = el("img", "details-provider");
+        img.src = logo;
+        img.alt = p.name;
+        img.title = p.name;
+        logos.append(img);
+      } else {
+        logos.append(el("span", "pill", p.name));
+      }
+    }
+    info.append(logos);
+  } else {
+    info.append(el("p", "muted", "Não está em nenhuma assinatura no Brasil."));
+  }
+
+  if (details.cast.length > 0) {
+    const cast = el("p", "details-cast");
+    cast.append(el("strong", "", "Elenco: "), details.cast.join(", "));
+    info.append(cast);
+  }
+
+  if (details.trailerUrl) {
+    const link = el("a", "details-trailer", "▶ Ver trailer no YouTube");
+    link.href = details.trailerUrl;
+    link.target = "_blank";
+    link.rel = "noopener";
+    info.append(link);
+  }
+
+  layout.append(info);
+  detailsBody(modal).replaceChildren(layout);
+  openModal(modal);
+}
+
+export function closeDetails(modal) {
+  modal.close();
+}
+
 export function setLoadMore(button, { visible, loading }) {
   button.hidden = !visible;
   button.disabled = loading;

@@ -1,15 +1,19 @@
 // Liga tudo: cliques → estado → TMDB → interface.
 import { TMDB_TOKEN } from "./config.js";
-import { createApi } from "./api.js";
+import { createApi, extractDetails } from "./api.js";
 import { formatCount } from "./format.js";
 import {
   createState, toggleProvider, toggleGenre, setSort, nextPage,
   applyResults, hasMore, createRequestCounter,
 } from "./state.js";
-import { renderMovies, renderProviders, renderGenres, setLoadMore } from "./ui.js";
+import {
+  renderMovies, renderProviders, renderGenres, setLoadMore,
+  showDetailsLoading, showDetailsError, openDetails, closeDetails,
+} from "./ui.js";
 
 const api = createApi(TMDB_TOKEN);
 const counter = createRequestCounter();
+const detailsCounter = createRequestCounter();
 
 const els = {
   providers: document.querySelector("#providers"),
@@ -21,6 +25,7 @@ const els = {
   count: document.querySelector("#count"),
   grid: document.querySelector("#grid"),
   loadMore: document.querySelector("#load-more"),
+  details: document.querySelector("#details"),
 };
 
 let state = createState();
@@ -97,6 +102,34 @@ els.loadMore.addEventListener("click", () => {
   if (loading) return;
   state = nextPage(state);
   loadMovies();
+});
+
+async function showMovie(id) {
+  const requestNumber = detailsCounter.next();
+  showDetailsLoading(els.details);
+  try {
+    const raw = await api.getMovieDetails(id);
+    if (detailsCounter.isLatest(requestNumber)) openDetails(els.details, extractDetails(raw));
+  } catch (error) {
+    if (detailsCounter.isLatest(requestNumber)) showDetailsError(els.details);
+  }
+}
+
+els.grid.addEventListener("click", (event) => {
+  const card = event.target.closest(".card");
+  if (card) showMovie(Number(card.dataset.id));
+});
+
+els.grid.addEventListener("keydown", (event) => {
+  const card = event.target.closest(".card");
+  if (card && event.key === "Enter") showMovie(Number(card.dataset.id));
+});
+
+els.details.querySelector(".details-close").addEventListener("click", () => closeDetails(els.details));
+
+// Clique no fundo escuro (fora do conteúdo) fecha a janela. A tecla Esc o <dialog> já trata.
+els.details.addEventListener("click", (event) => {
+  if (event.target === els.details) closeDetails(els.details);
 });
 
 async function start() {

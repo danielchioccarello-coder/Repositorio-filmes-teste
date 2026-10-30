@@ -1,6 +1,75 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildDiscoverParams, createApi, ApiError } from "../js/api.js";
+import { buildDiscoverParams, createApi, ApiError, extractDetails } from "../js/api.js";
+
+function rawDetails(overrides = {}) {
+  return {
+    id: 550,
+    title: "Clube da Luta",
+    release_date: "1999-10-15",
+    vote_average: 8.44,
+    vote_count: 30000,
+    runtime: 139,
+    poster_path: "/p.jpg",
+    overview: "Um homem deprimido...",
+    genres: [{ id: 18, name: "Drama" }],
+    credits: { cast: ["A", "B", "C", "D", "E", "F", "G"].map((name) => ({ name })) },
+    videos: { results: [] },
+    "watch/providers": { results: {} },
+    ...overrides,
+  };
+}
+
+test("extractDetails pega os 5 primeiros do elenco e os dados básicos", () => {
+  const d = extractDetails(rawDetails());
+  assert.deepEqual(d.cast, ["A", "B", "C", "D", "E"]);
+  assert.equal(d.title, "Clube da Luta");
+  assert.equal(d.year, "1999");
+  assert.equal(d.rating, "8,4");
+  assert.equal(d.runtime, "2h 19min");
+  assert.deepEqual(d.genres, ["Drama"]);
+  assert.equal(d.posterPath, "/p.jpg");
+});
+
+test("trailer: primeiro vídeo YouTube do tipo Trailer", () => {
+  const d = extractDetails(rawDetails({
+    videos: { results: [
+      { site: "Vimeo", type: "Trailer", key: "v" },
+      { site: "YouTube", type: "Teaser", key: "t" },
+      { site: "YouTube", type: "Trailer", key: "abc" },
+    ] },
+  }));
+  assert.equal(d.trailerUrl, "https://www.youtube.com/watch?v=abc");
+});
+
+test("sem trailer → trailerUrl null", () => {
+  assert.equal(extractDetails(rawDetails()).trailerUrl, null);
+});
+
+test("serviços vêm de watch/providers.results.BR.flatrate", () => {
+  const d = extractDetails(rawDetails({
+    "watch/providers": { results: { BR: { flatrate: [{ provider_id: 8, provider_name: "Netflix", logo_path: "/n.png" }] } } },
+  }));
+  assert.deepEqual(d.providers, [{ id: 8, name: "Netflix", logoPath: "/n.png" }]);
+});
+
+test("sem BR ou sem flatrate → providers []", () => {
+  assert.deepEqual(extractDetails(rawDetails()).providers, []);
+  assert.deepEqual(extractDetails(rawDetails({ "watch/providers": { results: { BR: { rent: [] } } } })).providers, []);
+  assert.deepEqual(extractDetails(rawDetails({ "watch/providers": undefined })).providers, []);
+});
+
+test('sinopse vazia vira "Sinopse não disponível em português."', () => {
+  assert.equal(extractDetails(rawDetails({ overview: "" })).overview, "Sinopse não disponível em português.");
+});
+
+test("getMovieDetails chama /movie/550 com append_to_response", async () => {
+  const f = fakeFetch(rawDetails());
+  await createApi("abc", f).getMovieDetails(550);
+  const url = new URL(f.calls[0].url);
+  assert.equal(url.pathname, "/3/movie/550");
+  assert.equal(url.searchParams.get("append_to_response"), "credits,videos,watch/providers");
+});
 
 // fetch falso: registra as chamadas e devolve uma resposta pronta
 function fakeFetch(body = {}, { ok = true, status = 200 } = {}) {
