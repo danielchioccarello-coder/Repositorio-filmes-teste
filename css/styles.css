@@ -305,6 +305,62 @@ main {
   cursor: wait;
 }
 
+/* Mensagens (vazio, erro, chave) */
+.message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 16px;
+  text-align: center;
+}
+
+.message-text {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.message-link {
+  color: var(--text);
+}
+
+/* Esqueletos de carregamento */
+.skeleton {
+  cursor: default;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skeleton:hover {
+  transform: none;
+  outline: none;
+}
+
+.skeleton-line {
+  height: 12px;
+  margin: 12px 10px 16px;
+  border-radius: 6px;
+  background: #2a2e37;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Rodapé */
+.site-footer {
+  padding: 20px 24px 28px;
+  border-top: 1px solid var(--surface);
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.site-footer a {
+  color: var(--text);
+}
+
 /* Grade de filmes: o número de colunas se ajusta sozinho à largura */
 .grid {
   display: grid;
@@ -358,4 +414,69 @@ main {
   margin: 0;
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+/* Celular */
+@media (max-width: 600px) {
+  .site-header,
+  main {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .filter-row-bottom {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-label {
+    flex-basis: auto;
+    padding-top: 0;
+  }
+
+  .providers {
+    width: 100%;
+  }
+
+  /* A fileira de serviços e gêneros rola de lado dentro dela mesma; a página não */
+  .provider-list,
+  .genres {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .provider,
+  .pill {
+    flex-shrink: 0;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .details {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .details-layout {
+    flex-direction: column;
+  }
+
+  .details-poster {
+    flex-basis: auto;
+    width: 160px;
+  }
 }

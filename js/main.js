@@ -1,17 +1,27 @@
 // Liga tudo: cliques → estado → TMDB → interface.
-import { TMDB_TOKEN } from "./config.js";
 import { createApi, extractDetails } from "./api.js";
 import { formatCount } from "./format.js";
 import {
-  createState, toggleProvider, toggleGenre, setSort, nextPage,
+  createState, toggleProvider, toggleGenre, setSort, clearFilters, nextPage,
   applyResults, hasMore, createRequestCounter,
 } from "./state.js";
 import {
-  renderMovies, renderProviders, renderGenres, setLoadMore,
+  renderMovies, renderProviders, renderGenres, setLoadMore, renderSkeleton,
+  renderMessage, clearMessage,
   showDetailsLoading, showDetailsError, openDetails, closeDetails,
 } from "./ui.js";
 
-const api = createApi(TMDB_TOKEN);
+// Se js/config.js não existir (erro comum), o site mostra como configurar em vez de ficar em branco
+async function loadToken() {
+  try {
+    const config = await import("./config.js");
+    return config.TMDB_TOKEN ?? "";
+  } catch {
+    return "";
+  }
+}
+
+const api = createApi(await loadToken());
 const counter = createRequestCounter();
 const detailsCounter = createRequestCounter();
 
@@ -23,6 +33,7 @@ const els = {
   genres: document.querySelector("#genres"),
   sort: document.querySelector("#sort"),
   count: document.querySelector("#count"),
+  message: document.querySelector("#message"),
   grid: document.querySelector("#grid"),
   loadMore: document.querySelector("#load-more"),
   details: document.querySelector("#details"),
@@ -33,10 +44,16 @@ let providers = [];
 let genres = [];
 let providerView = { expanded: false, filterText: "" };
 let loading = false;
+let started = false;
 
 function drawFilters() {
   renderProviders(els.providers, providers, state.selectedProviders, providerView);
   renderGenres(els.genres, genres, state.selectedGenres);
+}
+
+function showError(error) {
+  console.error(error);
+  renderMessage(els.message, error.type);
 }
 
 async function loadMovies() {
@@ -44,15 +61,30 @@ async function loadMovies() {
   const isFirstPage = state.page === 1;
   const before = state.movies.length;
   loading = true;
+  clearMessage(els.message);
+  if (isFirstPage) {
+    renderSkeleton(els.grid);
+    els.count.textContent = "";
+  }
   setLoadMore(els.loadMore, { visible: !isFirstPage, loading: true });
 
-  const data = await api.discoverMovies({
-    providerIds: state.selectedProviders,
-    allProviderIds: providers.map((p) => p.id),
-    genreIds: state.selectedGenres,
-    sort: state.sort,
-    page: state.page,
-  });
+  let data;
+  try {
+    data = await api.discoverMovies({
+      providerIds: state.selectedProviders,
+      allProviderIds: providers.map((p) => p.id),
+      genreIds: state.selectedGenres,
+      sort: state.sort,
+      page: state.page,
+    });
+  } catch (error) {
+    if (!counter.isLatest(requestNumber)) return;
+    loading = false;
+    if (isFirstPage) els.grid.replaceChildren();
+    setLoadMore(els.loadMore, { visible: false, loading: false });
+    showError(error);
+    return;
+  }
   // Se o usuário mudou o filtro enquanto esperava, esta resposta já não vale
   if (!counter.isLatest(requestNumber)) return;
 
@@ -63,6 +95,7 @@ async function loadMovies() {
     renderMovies(els.grid, state.movies.slice(before), { append: true });
   }
   els.count.textContent = formatCount(state.totalResults);
+  if (state.totalResults === 0) renderMessage(els.message, "vazio");
   loading = false;
   setLoadMore(els.loadMore, { visible: hasMore(state), loading: false });
 }
@@ -104,6 +137,13 @@ els.loadMore.addEventListener("click", () => {
   loadMovies();
 });
 
+// Botões das mensagens: "Limpar filtros" e "Tentar de novo"
+els.message.addEventListener("click", (event) => {
+  const action = event.target.closest("[data-action]")?.dataset.action;
+  if (action === "limpar") changeFilters(clearFilters(state));
+  if (action === "tentar") started ? loadMovies() : start();
+});
+
 async function showMovie(id) {
   const requestNumber = detailsCounter.next();
   showDetailsLoading(els.details);
@@ -111,18 +151,19 @@ async function showMovie(id) {
     const raw = await api.getMovieDetails(id);
     if (detailsCounter.isLatest(requestNumber)) openDetails(els.details, extractDetails(raw));
   } catch (error) {
+    console.error(error);
     if (detailsCounter.isLatest(requestNumber)) showDetailsError(els.details);
   }
 }
 
 els.grid.addEventListener("click", (event) => {
   const card = event.target.closest(".card");
-  if (card) showMovie(Number(card.dataset.id));
+  if (card?.dataset.id) showMovie(Number(card.dataset.id));
 });
 
 els.grid.addEventListener("keydown", (event) => {
   const card = event.target.closest(".card");
-  if (card && event.key === "Enter") showMovie(Number(card.dataset.id));
+  if (card?.dataset.id && event.key === "Enter") showMovie(Number(card.dataset.id));
 });
 
 els.details.querySelector(".details-close").addEventListener("click", () => closeDetails(els.details));
@@ -132,8 +173,18 @@ els.details.addEventListener("click", (event) => {
   if (event.target === els.details) closeDetails(els.details);
 });
 
+// Abertura: busca serviços e gêneros, depois os filmes
 async function start() {
-  [providers, genres] = await Promise.all([api.getProviders(), api.getGenres()]);
+  clearMessage(els.message);
+  renderSkeleton(els.grid);
+  try {
+    [providers, genres] = await Promise.all([api.getProviders(), api.getGenres()]);
+  } catch (error) {
+    els.grid.replaceChildren();
+    showError(error);
+    return;
+  }
+  started = true;
   drawFilters();
   await loadMovies();
 }

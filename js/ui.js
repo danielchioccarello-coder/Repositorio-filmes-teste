@@ -176,6 +176,68 @@ export function closeDetails(modal) {
   modal.close();
 }
 
+const MESSAGES = {
+  vazio: {
+    text: "Nenhum filme encontrado. Tente remover algum gênero.",
+    action: { label: "Limpar filtros", kind: "limpar" },
+    link: null,
+  },
+  falha: {
+    text: "Não foi possível carregar os filmes.",
+    action: { label: "Tentar de novo", kind: "tentar" },
+    link: null,
+  },
+  chave_invalida: {
+    text: "Configure sua chave do TMDB em js/config.js",
+    action: null,
+    link: "https://www.themoviedb.org/settings/api",
+  },
+};
+
+// kind: 'vazio' | 'rede' | 'outro' | 'chave_invalida' (rede, outro e desconhecidos usam a mensagem de falha)
+export function messageFor(kind) {
+  return MESSAGES[kind] ?? MESSAGES.falha;
+}
+
+// O botão de ação leva data-action="limpar" ou "tentar"; main.js trata o clique
+export function renderMessage(container, kind) {
+  const { text, action, link } = messageFor(kind);
+  const box = el("div", "message");
+  box.append(el("p", "message-text", text));
+  if (link) {
+    const a = el("a", "message-link", "Criar ou copiar minha chave no TMDB");
+    a.href = link;
+    a.target = "_blank";
+    a.rel = "noopener";
+    box.append(a);
+  }
+  if (action) {
+    const button = el("button", "load-more", action.label);
+    button.type = "button";
+    button.dataset.action = action.kind;
+    box.append(button);
+  }
+  container.replaceChildren(box);
+  container.hidden = false;
+}
+
+export function clearMessage(container) {
+  container.replaceChildren();
+  container.hidden = true;
+}
+
+// Cartões cinza "piscando" enquanto os filmes carregam
+export function renderSkeleton(grid, count = 12) {
+  grid.replaceChildren(
+    ...Array.from({ length: count }, () => {
+      const card = el("div", "card skeleton");
+      card.setAttribute("aria-hidden", "true");
+      card.append(el("div", "card-placeholder"), el("div", "skeleton-line"));
+      return card;
+    }),
+  );
+}
+
 export function setLoadMore(button, { visible, loading }) {
   button.hidden = !visible;
   button.disabled = loading;
