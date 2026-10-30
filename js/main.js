@@ -147,12 +147,14 @@ els.message.addEventListener("click", (event) => {
 async function showMovie(id) {
   const requestNumber = detailsCounter.next();
   showDetailsLoading(els.details);
+  // Só mostra se for o último filme clicado e a janela não foi fechada (✕, Esc ou clique fora) enquanto carregava
+  const stillWanted = () => detailsCounter.isLatest(requestNumber) && els.details.open;
   try {
     const raw = await api.getMovieDetails(id);
-    if (detailsCounter.isLatest(requestNumber)) openDetails(els.details, extractDetails(raw));
+    if (stillWanted()) openDetails(els.details, extractDetails(raw));
   } catch (error) {
     console.error(error);
-    if (detailsCounter.isLatest(requestNumber)) showDetailsError(els.details);
+    if (stillWanted()) showDetailsError(els.details);
   }
 }
 
@@ -167,7 +169,6 @@ els.grid.addEventListener("keydown", (event) => {
 });
 
 els.details.querySelector(".details-close").addEventListener("click", () => closeDetails(els.details));
-
 // Clique no fundo escuro (fora do conteúdo) fecha a janela. A tecla Esc o <dialog> já trata.
 els.details.addEventListener("click", (event) => {
   if (event.target === els.details) closeDetails(els.details);

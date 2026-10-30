@@ -71,6 +71,22 @@ test("getMovieDetails chama /movie/550 com append_to_response", async () => {
   assert.equal(url.searchParams.get("append_to_response"), "credits,videos,watch/providers");
 });
 
+test("getMovieDetails pede trailers em português, inglês e sem idioma", async () => {
+  const f = fakeFetch(rawDetails());
+  await createApi("abc", f).getMovieDetails(550);
+  assert.equal(new URL(f.calls[0].url).searchParams.get("include_video_language"), "pt,en,null");
+});
+
+test("trailer em português tem preferência sobre o inglês", () => {
+  const d = extractDetails(rawDetails({
+    videos: { results: [
+      { site: "YouTube", type: "Trailer", key: "en1", iso_639_1: "en" },
+      { site: "YouTube", type: "Trailer", key: "pt1", iso_639_1: "pt" },
+    ] },
+  }));
+  assert.equal(d.trailerUrl, "https://www.youtube.com/watch?v=pt1");
+});
+
 // fetch falso: registra as chamadas e devolve uma resposta pronta
 function fakeFetch(body = {}, { ok = true, status = 200 } = {}) {
   const calls = [];

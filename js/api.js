@@ -43,7 +43,8 @@ function toProvider(p) {
 
 // Transforma a resposta de detalhes do TMDB só no que a janela precisa mostrar.
 export function extractDetails(raw) {
-  const trailer = (raw.videos?.results ?? []).find((v) => v.site === "YouTube" && v.type === "Trailer");
+  const trailers = (raw.videos?.results ?? []).filter((v) => v.site === "YouTube" && v.type === "Trailer");
+  const trailer = trailers.find((v) => v.iso_639_1 === "pt") ?? trailers[0];
   const flatrate = raw["watch/providers"]?.results?.BR?.flatrate ?? [];
   return {
     id: raw.id,
@@ -105,7 +106,11 @@ export function createApi(token, fetchFn = globalThis.fetch) {
   }
 
   function getMovieDetails(id) {
-    const params = new URLSearchParams({ append_to_response: "credits,videos,watch/providers" });
+    // Com language=pt-BR o TMDB só mandaria trailers em português; a maioria só tem em inglês
+    const params = new URLSearchParams({
+      append_to_response: "credits,videos,watch/providers",
+      include_video_language: "pt,en,null",
+    });
     return request(`/movie/${id}`, params);
   }
 
