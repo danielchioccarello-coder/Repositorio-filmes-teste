@@ -1,0 +1,8 @@
+{
+  "name": "catalogo-streaming-br",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}

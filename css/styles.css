@@ -1,0 +1,33 @@
+:root {
+  --bg: #0f1115;
+  --surface: #1a1d24;
+  --text: #e8e8ea;
+  --muted: #9aa0a6;
+  --accent: #e50914;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+.site-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--surface);
+}
+
+.site-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+main {
+  padding: 16px 24px;
+}
