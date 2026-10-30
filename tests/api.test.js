@@ -71,6 +71,32 @@ test("fetch rejeitado (TypeError) vira rede", async () => {
   await assert.rejects(createApi("abc", f).discoverMovies(base), (e) => e.type === "rede");
 });
 
+test("gêneros separados por vírgula", () => {
+  assert.equal(buildDiscoverParams({ ...base, genreIds: [28, 35] }).get("with_genres"), "28,35");
+});
+
+test("sem gênero não envia with_genres", () => {
+  assert.equal(buildDiscoverParams({ ...base, genreIds: [] }).has("with_genres"), false);
+});
+
+test("ordenação por nota exige 200 votos", () => {
+  const p = buildDiscoverParams({ ...base, sort: "nota" });
+  assert.equal(p.get("sort_by"), "vote_average.desc");
+  assert.equal(p.get("vote_count.gte"), "200");
+});
+
+test("ordenação por lançamento", () => {
+  const p = buildDiscoverParams({ ...base, sort: "lancamento" });
+  assert.equal(p.get("sort_by"), "primary_release_date.desc");
+  assert.equal(p.has("vote_count.gte"), false);
+});
+
+test("getGenres devolve genres", async () => {
+  const f = fakeFetch({ genres: [{ id: 28, name: "Ação" }] });
+  assert.deepEqual(await createApi("abc", f).getGenres(), [{ id: 28, name: "Ação" }]);
+  assert.ok(f.calls[0].url.includes("/genre/movie/list"));
+});
+
 test("getProviders ordena por prioridade do Brasil e renomeia campos", async () => {
   const f = fakeFetch({
     results: [

@@ -11,17 +11,28 @@ export class ApiError extends Error {
   }
 }
 
+const SORT_BY = {
+  popularidade: "popularity.desc",
+  nota: "vote_average.desc",
+  lancamento: "primary_release_date.desc",
+};
+
 // Monta os parâmetros da busca de filmes a partir dos filtros escolhidos.
-export function buildDiscoverParams({ providerIds, allProviderIds, page }) {
+// Serviços com "|" (qualquer um deles); gêneros com "," (todos eles).
+export function buildDiscoverParams({ providerIds, allProviderIds, genreIds = [], sort = "popularidade", page }) {
   const ids = providerIds.length > 0 ? providerIds : allProviderIds;
-  return new URLSearchParams({
+  const params = new URLSearchParams({
     language: "pt-BR",
     watch_region: "BR",
     with_watch_monetization_types: "flatrate",
     with_watch_providers: ids.join("|"),
-    sort_by: "popularity.desc",
+    sort_by: SORT_BY[sort],
     page: String(page),
   });
+  if (genreIds.length > 0) params.set("with_genres", genreIds.join(","));
+  // Sem isso, um filme com 3 votos e nota 10 ficaria no topo
+  if (sort === "nota") params.set("vote_count.gte", "200");
+  return params;
 }
 
 export function createApi(token, fetchFn = globalThis.fetch) {
@@ -59,9 +70,14 @@ export function createApi(token, fetchFn = globalThis.fetch) {
       .map((p) => ({ id: p.provider_id, name: p.provider_name, logoPath: p.logo_path }));
   }
 
+  async function getGenres() {
+    const data = await request("/genre/movie/list");
+    return data.genres;
+  }
+
   function discoverMovies(filters) {
     return request("/discover/movie", buildDiscoverParams(filters));
   }
 
-  return { getProviders, discoverMovies };
+  return { getProviders, getGenres, discoverMovies };
 }
