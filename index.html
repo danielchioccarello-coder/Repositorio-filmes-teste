@@ -11,8 +11,33 @@
     <h1>Catálogo Streaming BR</h1>
   </header>
   <main id="app">
-    <p id="count" class="count"></p>
+    <section class="filters" aria-label="Filtros">
+      <div class="filter-row">
+        <span class="filter-label">Serviços</span>
+        <div id="providers" class="providers">
+          <input id="provider-search" class="provider-search" type="search" placeholder="Buscar serviço..." aria-label="Buscar serviço" hidden>
+          <div id="provider-list" class="provider-list"></div>
+          <button id="provider-toggle" class="link-button" type="button">+ ver todos</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">Gêneros</span>
+        <div id="genres" class="genres"></div>
+      </div>
+      <div class="filter-row filter-row-bottom">
+        <label class="filter-label" for="sort">Ordenar</label>
+        <select id="sort" class="sort">
+          <option value="popularidade">Popularidade</option>
+          <option value="nota">Nota</option>
+          <option value="lancamento">Lançamento</option>
+        </select>
+        <p id="count" class="count" aria-live="polite"></p>
+      </div>
+    </section>
     <section id="grid" class="grid" aria-label="Filmes"></section>
+    <div class="load-more-wrap">
+      <button id="load-more" class="load-more" type="button" hidden>Carregar mais filmes</button>
+    </div>
   </main>
   <script type="module" src="js/main.js"></script>
 </body>
