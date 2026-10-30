@@ -31,3 +31,63 @@ body {
 main {
   padding: 16px 24px;
 }
+
+.count {
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+/* Grade de filmes: o número de colunas se ajusta sozinho à largura */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-4px);
+  outline: 2px solid var(--accent);
+}
+
+.card-poster,
+.card-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.card-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  text-align: center;
+  background: #2a2e37;
+  color: var(--muted);
+}
+
+.card-info {
+  padding: 8px 10px 12px;
+}
+
+.card-title {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.card-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
