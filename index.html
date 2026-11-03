@@ -12,6 +12,7 @@
 <body>
   <header class="site-header" id="site-header">
     <a class="logo" href="./">Catálogo<span class="logo-br">BR</span></a>
+    <div id="conta" class="conta"></div>
   </header>
 
   <!-- Banner: o filme em destaque, com a imagem de fundo e o degradê de cinema -->
@@ -23,7 +24,9 @@
   </section>
 
   <main id="app">
-    <section class="filters" aria-label="Filtros">
+    <nav id="abas" class="abas" aria-label="Listas" role="tablist"></nav>
+
+    <section id="filters" class="filters" aria-label="Filtros">
       <div class="filter-row">
         <span class="filter-label">Serviços</span>
         <div id="providers" class="providers">
@@ -41,6 +44,7 @@
     <div class="row-head">
       <h2 id="row-title" class="row-title">Mais populares</h2>
       <p id="count" class="count" aria-live="polite"></p>
+      <div id="row-controls" class="row-controls">
       <label class="sort-wrap">
         <span class="sort-label">Ordenar por</span>
         <select id="sort" class="sort">
@@ -59,6 +63,7 @@
           <option value="9">9+</option>
         </select>
       </label>
+      </div>
     </div>
 
     <div id="message" role="status" hidden></div>
@@ -75,6 +80,26 @@
     <div class="details-inner">
       <button class="details-close" type="button" aria-label="Fechar">✕</button>
       <div id="details-body"></div>
+    </div>
+  </dialog>
+  <dialog id="login" class="login" aria-labelledby="login-titulo">
+    <div class="login-inner">
+      <button class="details-close" type="button" aria-label="Fechar">✕</button>
+      <h2 id="login-titulo" class="login-titulo">Entrar</h2>
+      <p class="login-aviso" hidden></p>
+      <form class="login-form">
+        <label class="login-campo">
+          <span>E-mail</span>
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label class="login-campo">
+          <span>Senha</span>
+          <input type="password" name="senha" autocomplete="current-password" minlength="6" required>
+        </label>
+        <p class="login-erro" role="alert"></p>
+        <button type="submit" class="btn btn-primary login-enviar">Entrar</button>
+        <button type="button" class="link-button login-troca">Não tem conta? Criar conta</button>
+      </form>
     </div>
   </dialog>
   <script type="module" src="js/main.js"></script>

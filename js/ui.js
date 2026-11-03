@@ -2,14 +2,23 @@
 import { formatYear, formatRating, posterUrl } from "./format.js";
 
 // Cria um elemento com classe e texto (o texto entra com textContent, nunca como HTML)
-function el(tag, className, text) {
+export function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
 }
 
-function movieCard(movie) {
+const SELOS = {
+  quero: { icone: "🔖", texto: "Na sua lista Quero assistir" },
+  assisti: { icone: "✓", texto: "Você já assistiu" },
+};
+
+export function seloDoStatus(status) {
+  return SELOS[status] ?? null;
+}
+
+function movieCard(movie, status) {
   const card = el("article", "card");
   card.dataset.id = movie.id;
   card.tabIndex = 0;
@@ -27,6 +36,15 @@ function movieCard(movie) {
     card.append(el("div", "card-placeholder", movie.title));
   }
 
+  const selo = seloDoStatus(status);
+  if (selo) {
+    const badge = el("span", "card-selo", selo.icone);
+    badge.setAttribute("role", "img");
+    badge.setAttribute("aria-label", selo.texto);
+    badge.title = selo.texto;
+    card.append(badge);
+  }
+
   const info = el("div", "card-info");
   info.append(el("h3", "card-title", movie.title));
   const year = formatYear(movie.release_date);
@@ -36,9 +54,10 @@ function movieCard(movie) {
   return card;
 }
 
-export function renderMovies(grid, movies, { append }) {
+// statusDe(id) diz em qual lista o filme está, para desenhar o selo
+export function renderMovies(grid, movies, { append, statusDe = () => null }) {
   if (!append) grid.replaceChildren();
-  grid.append(...movies.map(movieCard));
+  grid.append(...movies.map((movie) => movieCard(movie, statusDe(movie.id))));
 }
 
 // Ícone SVG simples (o "i" de informações e o ▶ do trailer)
@@ -212,6 +231,8 @@ export function openDetails(modal, details) {
   info.append(el("h2", "details-title", details.year ? `${details.title} (${details.year})` : details.title));
   const meta = [`★ ${details.rating}`, details.runtime, details.genres.join(", ")].filter(Boolean).join(" · ");
   info.append(el("p", "details-meta", meta));
+  // Lugar dos botões "Quero assistir" e "Já assisti" (main.js desenha)
+  info.append(el("div", "details-marcar"));
   info.append(el("p", "details-overview", details.overview));
 
   info.append(el("h3", "details-subtitle", "Disponível em:"));
@@ -270,6 +291,26 @@ const MESSAGES = {
     action: { label: "Tentar de novo", kind: "tentar" },
     link: null,
   },
+  entre_para_ver: {
+    text: "Entre para ver suas listas",
+    action: { label: "Entrar", kind: "entrar" },
+    link: null,
+  },
+  vazia_quero: {
+    text: "Você ainda não marcou nenhum filme para assistir.",
+    action: null,
+    link: null,
+  },
+  vazia_assisti: {
+    text: "Você ainda não marcou nenhum filme como assistido.",
+    action: null,
+    link: null,
+  },
+  falha_listas: {
+    text: "Não deu para carregar suas listas.",
+    action: { label: "Tentar de novo", kind: "tentar_listas" },
+    link: null,
+  },
   chave_invalida: {
     text: "Configure sua chave do TMDB em js/config.js",
     action: null,
@@ -277,12 +318,13 @@ const MESSAGES = {
   },
 };
 
-// kind: 'vazio' | 'rede' | 'outro' | 'chave_invalida' (rede, outro e desconhecidos usam a mensagem de falha)
+// kind: 'vazio' | 'rede' | 'outro' | 'chave_invalida' | 'entre_para_ver' | 'vazia_quero' | 'vazia_assisti' | 'falha_listas'
+// (rede, outro e desconhecidos usam a mensagem de falha)
 export function messageFor(kind) {
   return MESSAGES[kind] ?? MESSAGES.falha;
 }
 
-// O botão de ação leva data-action="limpar" ou "tentar"; main.js trata o clique
+// O botão de ação leva data-action="limpar", "tentar", "entrar" ou "tentar_listas"; main.js trata o clique
 export function renderMessage(container, kind) {
   const { text, action, link } = messageFor(kind);
   const box = el("div", "message");

@@ -423,16 +423,22 @@ main {
   font-size: 0.95rem;
 }
 
+/* As duas caixinhas (Ordenar e Nota mínima) ficam juntas à direita */
+.row-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-left: auto;
+}
+
+.row-controls[hidden] {
+  display: none;
+}
+
 .sort-wrap {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
-}
-
-/* A segunda caixinha (Nota mínima) fica colada na primeira */
-.sort-wrap + .sort-wrap {
-  margin-left: 0;
 }
 
 .sort-label {
@@ -844,9 +850,22 @@ main {
     flex-shrink: 0;
   }
 
-  .sort-wrap {
+  .row-controls {
     margin-left: 0;
     width: 100%;
+  }
+
+  .sort-wrap {
+    width: 100%;
+  }
+
+  .conta-email {
+    display: none;
+  }
+
+  .login {
+    width: 100%;
+    max-width: 100%;
   }
 
   .grid {
@@ -887,4 +906,218 @@ main {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ===== Conta, abas e listas ===== */
+.site-header {
+  justify-content: space-between;
+}
+
+.conta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.conta-email {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 28ch;
+}
+
+.conta-botao {
+  padding: 8px 18px;
+  font-size: 0.95rem;
+}
+
+/* Abas em pílulas de vidro, como os filtros; a ativa fica branca */
+.abas {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.aba {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.aba:hover {
+  background: rgba(60, 60, 60, 0.7);
+}
+
+.aba[aria-selected="true"] {
+  border-color: #fff;
+  background: #fff;
+  color: #000;
+}
+
+.filters[hidden] {
+  display: none;
+}
+
+/* Selo no canto do pôster: em qual lista o filme está */
+.card-selo {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.75);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+/* Botões de marcar na janela de detalhes */
+.details-marcar {
+  margin: 4px 0 18px;
+}
+
+.marcar-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.marcar {
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.marcar:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.marcar[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.marcar:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.marcar-erro {
+  margin: 10px 0 0;
+  color: #ff8a8a;
+  font-size: 0.9rem;
+}
+
+/* ===== Janela de login ===== */
+.login {
+  width: min(420px, calc(100% - 32px));
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+}
+
+.login[open] {
+  animation: pop 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.login::backdrop {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.login-inner {
+  position: relative;
+  padding: 32px 28px 28px;
+}
+
+.login-titulo {
+  margin: 0 0 22px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-stretch: 115%;
+}
+
+.login-aviso {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-form[hidden] {
+  display: none;
+}
+
+.login-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.login-campo input {
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.login-campo input:focus {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+
+.login-erro {
+  min-height: 1.2em;
+  margin: 0;
+  color: #ff8a8a;
+  font-size: 0.9rem;
+}
+
+.login-enviar {
+  justify-content: center;
+}
+
+.login-enviar:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.login-troca {
+  align-self: center;
 }
