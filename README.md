@@ -9,6 +9,17 @@ Site que mostra os filmes inclusos na assinatura dos serviços de streaming no B
 3. Copie o arquivo `js/config.example.js` para `js/config.js` e cole o token entre as aspas.
    O `js/config.js` fica fora do git, então sua chave não vai parar no repositório.
 
+## Login e listas (Supabase)
+
+Opcional: sem isso, o site funciona só como catálogo.
+
+1. Crie uma conta em [supabase.com](https://supabase.com) e um projeto novo (o plano gratuito basta).
+2. Abra **SQL Editor**, cole o conteúdo de `supabase/schema.sql` e clique em **Run**.
+3. Em **Authentication → Sign In / Providers → Email**, desligue **"Confirm email"**.
+4. Em **Project Settings → API**, copie o **Project URL** e a chave **anon / public** para `SUPABASE_URL` e `SUPABASE_ANON_KEY` no `js/config.js`.
+
+> No plano gratuito, projetos sem uso por 7 dias são pausados. Para voltar, clique em **Restore** no painel do Supabase.
+
 ## Como rodar
 
 1. Abra esta pasta no VS Code.
@@ -41,5 +52,4 @@ npm test
 ## Ideias para próximas versões
 
 - Busca por título
-- Lista de favoritos / "quero assistir" salva no navegador
 - Séries, além dos filmes
