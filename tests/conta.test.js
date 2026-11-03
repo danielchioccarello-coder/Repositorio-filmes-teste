@@ -86,3 +86,10 @@ test("aoMudarSessao avisa quem entrou e quem saiu", () => {
   client.disparar("SIGNED_OUT", null);
   assert.deepEqual(recebidos, [usuario, null]);
 });
+
+test("entrar com e-mail não confirmado explica que falta desligar a confirmação", async () => {
+  const client = fakeClient({ data: {}, error: { code: "email_not_confirmed" } });
+  await assert.rejects(entrar(client, "a@b.com", "123456"), {
+    message: 'Esse e-mail ainda não foi confirmado. Desligue "Confirm email" no painel do Supabase ou clique no link que chegou no seu e-mail.',
+  });
+});

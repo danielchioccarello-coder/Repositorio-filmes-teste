@@ -7,6 +7,9 @@ const ERROS = {
   weak_password: "A senha precisa ter pelo menos 6 caracteres.",
   email_address_invalid: "Digite um e-mail válido.",
   validation_failed: "Digite um e-mail válido.",
+  // Conta criada com a confirmação por e-mail ainda ligada (o link confirma mesmo que a página depois não abra)
+  email_not_confirmed:
+    'Esse e-mail ainda não foi confirmado. Desligue "Confirm email" no painel do Supabase ou clique no link que chegou no seu e-mail.',
 };
 
 const SEM_INTERNET = "Não deu para conectar. Verifique a internet e tente de novo.";
