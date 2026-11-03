@@ -33,8 +33,8 @@ async function loadToken() {
 const api = createApi(await loadToken());
 const counter = createRequestCounter();
 const detailsCounter = createRequestCounter();
-// null quando o Supabase não está configurado: o site fica só com o catálogo
-const client = await criarCliente();
+// null quando o Supabase não está configurado (ou enquanto a biblioteca baixa): o site fica só com o catálogo
+let client = null;
 const listasCounter = createRequestCounter();
 
 const els = {
@@ -482,7 +482,6 @@ els.details.addEventListener("close", () => {
 
 renderConta(els.conta, null);
 renderAbas(els.abas, state.aba);
-if (client) aoMudarSessao(client, changeUser);
 
 // Abertura: busca serviços e gêneros, depois os filmes
 async function start() {
@@ -504,3 +503,9 @@ async function start() {
 }
 
 start();
+
+// O login carrega em paralelo: se a biblioteca do Supabase demorar, o catálogo não espera
+criarCliente().then((c) => {
+  client = c;
+  if (client) aoMudarSessao(client, changeUser);
+});
