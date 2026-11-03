@@ -2,12 +2,12 @@
 import { createApi, extractDetails } from "./api.js";
 import { formatCount } from "./format.js";
 import {
-  createState, toggleProvider, toggleGenre, setSort, clearFilters, nextPage,
+  createState, toggleProvider, toggleGenre, setSort, setMinRating, clearFilters, nextPage,
   applyResults, hasMore, createRequestCounter,
 } from "./state.js";
 import {
   renderMovies, renderProviders, renderGenres, setLoadMore, renderSkeleton,
-  renderMessage, clearMessage,
+  renderMessage, clearMessage, renderHero, showHeroSlide,
   showDetailsLoading, showDetailsError, openDetails, closeDetails,
 } from "./ui.js";
 
@@ -32,12 +32,18 @@ const els = {
   providerToggle: document.querySelector("#provider-toggle"),
   genres: document.querySelector("#genres"),
   sort: document.querySelector("#sort"),
+  minRating: document.querySelector("#min-rating"),
   count: document.querySelector("#count"),
   message: document.querySelector("#message"),
   grid: document.querySelector("#grid"),
   loadMore: document.querySelector("#load-more"),
   details: document.querySelector("#details"),
+  hero: document.querySelector("#hero"),
+  header: document.querySelector("#site-header"),
+  rowTitle: document.querySelector("#row-title"),
 };
+
+const ROW_TITLES = { popularidade: "Mais populares", nota: "Mais bem avaliados", lancamento: "Lançamentos" };
 
 let state = createState();
 let providers = [];
@@ -45,6 +51,36 @@ let genres = [];
 let providerView = { expanded: false, filterText: "" };
 let loading = false;
 let started = false;
+
+// Banner: os 5 primeiros filmes com imagem de fundo, trocando sozinhos a cada 8 segundos
+const HERO_SIZE = 5;
+const HERO_INTERVAL = 8000;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let heroMovies = [];
+let heroIndex = 0;
+let heroTimer = null;
+let heroPaused = false;
+
+function goToSlide(index) {
+  heroIndex = (index + heroMovies.length) % heroMovies.length;
+  showHeroSlide(els.hero, heroMovies, heroIndex);
+}
+
+function restartHeroTimer() {
+  clearInterval(heroTimer);
+  // Quem pediu menos movimento no sistema não recebe troca automática
+  if (reduceMotion || heroMovies.length < 2) return;
+  heroTimer = setInterval(() => {
+    if (!heroPaused && !document.hidden) goToSlide(heroIndex + 1);
+  }, HERO_INTERVAL);
+}
+
+function updateHero(movies) {
+  heroMovies = movies.filter((m) => m.backdrop_path).slice(0, HERO_SIZE);
+  renderHero(els.hero, heroMovies);
+  if (heroMovies.length > 0) goToSlide(0);
+  restartHeroTimer();
+}
 
 function drawFilters() {
   renderProviders(els.providers, providers, state.selectedProviders, providerView);
@@ -75,6 +111,7 @@ async function loadMovies() {
       allProviderIds: providers.map((p) => p.id),
       genreIds: state.selectedGenres,
       sort: state.sort,
+      minRating: state.minRating,
       page: state.page,
     });
   } catch (error) {
@@ -91,6 +128,7 @@ async function loadMovies() {
   state = applyResults(state, data);
   if (isFirstPage) {
     renderMovies(els.grid, state.movies, { append: false });
+    updateHero(state.movies);
   } else {
     renderMovies(els.grid, state.movies.slice(before), { append: true });
   }
@@ -103,6 +141,9 @@ async function loadMovies() {
 // Muda o estado, redesenha os filtros e busca de novo
 function changeFilters(newState) {
   state = newState;
+  els.rowTitle.textContent = ROW_TITLES[state.sort];
+  // "Limpar filtros" zera a nota, então a caixinha precisa acompanhar
+  els.minRating.value = String(state.minRating);
   drawFilters();
   loadMovies();
 }
@@ -118,6 +159,8 @@ els.genres.addEventListener("click", (event) => {
 });
 
 els.sort.addEventListener("change", () => changeFilters(setSort(state, els.sort.value)));
+
+els.minRating.addEventListener("change", () => changeFilters(setMinRating(state, Number(els.minRating.value))));
 
 els.providerToggle.addEventListener("click", () => {
   providerView = { expanded: !providerView.expanded, filterText: "" };
@@ -165,8 +208,32 @@ els.grid.addEventListener("click", (event) => {
 
 els.grid.addEventListener("keydown", (event) => {
   const card = event.target.closest(".card");
-  if (card?.dataset.id && event.key === "Enter") showMovie(Number(card.dataset.id));
+  if (card?.dataset.id && (event.key === "Enter" || event.key === " ")) {
+    event.preventDefault();
+    showMovie(Number(card.dataset.id));
+  }
 });
+
+els.hero.addEventListener("click", (event) => {
+  const dot = event.target.closest("[data-slide]");
+  if (dot) {
+    goToSlide(Number(dot.dataset.slide));
+    restartHeroTimer();
+  }
+  const more = event.target.closest("[data-movie-id]");
+  if (more) showMovie(Number(more.dataset.movieId));
+});
+
+// Pausa a troca automática enquanto o mouse ou o teclado estão no banner
+els.hero.addEventListener("pointerenter", () => { heroPaused = true; });
+els.hero.addEventListener("pointerleave", () => { heroPaused = false; });
+els.hero.addEventListener("focusin", () => { heroPaused = true; });
+els.hero.addEventListener("focusout", () => { heroPaused = false; });
+
+// Cabeçalho fica preto quando a página rola
+window.addEventListener("scroll", () => {
+  els.header.classList.toggle("is-solid", window.scrollY > 40);
+}, { passive: true });
 
 els.details.querySelector(".details-close").addEventListener("click", () => closeDetails(els.details));
 // Clique no fundo escuro (fora do conteúdo) fecha a janela. A tecla Esc o <dialog> já trata.

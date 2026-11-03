@@ -5,6 +5,7 @@ export function createState() {
     selectedProviders: [],
     selectedGenres: [],
     sort: "popularidade",
+    minRating: 0,
     page: 1,
     totalPages: 0,
     totalResults: 0,
@@ -33,8 +34,12 @@ export function setSort(state, sort) {
   return restart(state, { sort });
 }
 
+export function setMinRating(state, minRating) {
+  return restart(state, { minRating });
+}
+
 export function clearFilters(state) {
-  return restart(state, { selectedProviders: [], selectedGenres: [] });
+  return restart(state, { selectedProviders: [], selectedGenres: [], minRating: 0 });
 }
 
 export function nextPage(state) {

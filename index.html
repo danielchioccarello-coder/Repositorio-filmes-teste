@@ -4,12 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Catálogo Streaming BR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <h1>Catálogo Streaming BR</h1>
+  <header class="site-header" id="site-header">
+    <a class="logo" href="./">Catálogo<span class="logo-br">BR</span></a>
   </header>
+
+  <!-- Banner: o filme em destaque, com a imagem de fundo e o degradê de cinema -->
+  <section id="hero" class="hero" aria-label="Filme em destaque">
+    <div class="hero-backdrops" id="hero-backdrops"></div>
+    <div class="hero-shade" aria-hidden="true"></div>
+    <div class="hero-content" id="hero-content"></div>
+    <div class="hero-dots" id="hero-dots"></div>
+  </section>
+
   <main id="app">
     <section class="filters" aria-label="Filtros">
       <div class="filter-row">
@@ -24,16 +36,31 @@
         <span class="filter-label">Gêneros</span>
         <div id="genres" class="genres"></div>
       </div>
-      <div class="filter-row filter-row-bottom">
-        <label class="filter-label" for="sort">Ordenar</label>
+    </section>
+
+    <div class="row-head">
+      <h2 id="row-title" class="row-title">Mais populares</h2>
+      <p id="count" class="count" aria-live="polite"></p>
+      <label class="sort-wrap">
+        <span class="sort-label">Ordenar por</span>
         <select id="sort" class="sort">
           <option value="popularidade">Popularidade</option>
           <option value="nota">Nota</option>
           <option value="lancamento">Lançamento</option>
         </select>
-        <p id="count" class="count" aria-live="polite"></p>
-      </div>
-    </section>
+      </label>
+      <label class="sort-wrap">
+        <span class="sort-label">Nota mínima</span>
+        <select id="min-rating" class="sort">
+          <option value="0">Qualquer nota</option>
+          <option value="6">6+</option>
+          <option value="7">7+</option>
+          <option value="8">8+</option>
+          <option value="9">9+</option>
+        </select>
+      </label>
+    </div>
+
     <div id="message" role="status" hidden></div>
     <section id="grid" class="grid" aria-label="Filmes"></section>
     <div class="load-more-wrap">

@@ -197,3 +197,20 @@ test("getProviders ordena por prioridade do Brasil e renomeia campos", async () 
   assert.ok(f.calls[0].url.includes("/watch/providers/movie"));
   assert.ok(f.calls[0].url.includes("watch_region=BR"));
 });
+
+test("extractDetails traz a imagem de fundo (ou null)", () => {
+  assert.equal(extractDetails(rawDetails({ backdrop_path: "/b.jpg" })).backdropPath, "/b.jpg");
+  assert.equal(extractDetails(rawDetails()).backdropPath, null);
+});
+
+test("nota mínima envia vote_average.gte e exige 200 votos", () => {
+  const p = buildDiscoverParams({ ...base, minRating: 8 });
+  assert.equal(p.get("vote_average.gte"), "8");
+  assert.equal(p.get("vote_count.gte"), "200");
+});
+
+test("sem nota mínima não envia vote_average.gte nem vote_count.gte", () => {
+  const p = buildDiscoverParams(base);
+  assert.equal(p.has("vote_average.gte"), false);
+  assert.equal(p.has("vote_count.gte"), false);
+});

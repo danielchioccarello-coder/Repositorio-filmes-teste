@@ -21,7 +21,7 @@ const SORT_BY = {
 
 // Monta os parâmetros da busca de filmes a partir dos filtros escolhidos.
 // Serviços com "|" (qualquer um deles); gêneros com "," (todos eles).
-export function buildDiscoverParams({ providerIds, allProviderIds, genreIds = [], sort = "popularidade", page }) {
+export function buildDiscoverParams({ providerIds, allProviderIds, genreIds = [], sort = "popularidade", minRating = 0, page }) {
   const ids = providerIds.length > 0 ? providerIds : allProviderIds;
   const params = new URLSearchParams({
     language: "pt-BR",
@@ -32,8 +32,9 @@ export function buildDiscoverParams({ providerIds, allProviderIds, genreIds = []
     page: String(page),
   });
   if (genreIds.length > 0) params.set("with_genres", genreIds.join(","));
+  if (minRating > 0) params.set("vote_average.gte", String(minRating));
   // Sem isso, um filme com 3 votos e nota 10 ficaria no topo
-  if (sort === "nota") params.set("vote_count.gte", "200");
+  if (sort === "nota" || minRating > 0) params.set("vote_count.gte", "200");
   return params;
 }
 
@@ -58,6 +59,7 @@ export function extractDetails(raw) {
     trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : null,
     providers: flatrate.map(toProvider),
     posterPath: raw.poster_path,
+    backdropPath: raw.backdrop_path ?? null,
   };
 }
 

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  createState, toggleProvider, toggleGenre, setSort, clearFilters,
+  createState, toggleProvider, toggleGenre, setSort, setMinRating, clearFilters,
   nextPage, applyResults, hasMore, createRequestCounter,
 } from "../js/state.js";
 
@@ -84,4 +84,19 @@ test("funções não alteram o estado original", () => {
   nextPage(s);
   applyResults(s, { results: [{ id: 1 }], total_pages: 1, total_results: 1 });
   assert.deepEqual(s, copy);
+});
+
+test("começa sem nota mínima", () => {
+  assert.equal(createState().minRating, 0);
+});
+
+test("setMinRating guarda a nota e volta à página 1", () => {
+  const s = setMinRating({ ...createState(), page: 3, movies: [{ id: 1 }] }, 8);
+  assert.equal(s.minRating, 8);
+  assert.equal(s.page, 1);
+  assert.deepEqual(s.movies, []);
+});
+
+test("clearFilters também zera a nota mínima", () => {
+  assert.equal(clearFilters({ ...createState(), minRating: 8 }).minRating, 0);
 });

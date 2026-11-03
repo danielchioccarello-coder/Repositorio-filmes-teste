@@ -20,6 +20,8 @@ function movieCard(movie) {
     img.src = src;
     img.alt = `Pôster de ${movie.title}`;
     img.loading = "lazy";
+    // Se a imagem não carregar, mostra o nome do filme no lugar
+    img.addEventListener("error", () => img.replaceWith(el("div", "card-placeholder", movie.title)), { once: true });
     card.append(img);
   } else {
     card.append(el("div", "card-placeholder", movie.title));
@@ -37,6 +39,71 @@ function movieCard(movie) {
 export function renderMovies(grid, movies, { append }) {
   if (!append) grid.replaceChildren();
   grid.append(...movies.map(movieCard));
+}
+
+// Ícone SVG simples (o "i" de informações e o ▶ do trailer)
+const ICONS = {
+  info: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z",
+  play: "M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z",
+};
+
+function icon(name) {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("class", "btn-icon");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(ns, "path");
+  path.setAttribute("d", ICONS[name]);
+  svg.append(path);
+  return svg;
+}
+
+// Banner: hero = <section id="hero">. Monta as imagens de fundo e as bolinhas dos destaques.
+export function renderHero(hero, movies) {
+  const backdrops = hero.querySelector("#hero-backdrops");
+  const dots = hero.querySelector("#hero-dots");
+  backdrops.replaceChildren(
+    ...movies.map((movie) => {
+      const img = el("img", "hero-backdrop");
+      img.src = posterUrl(movie.backdrop_path, "original");
+      img.alt = "";
+      return img;
+    }),
+  );
+  dots.replaceChildren(
+    ...(movies.length > 1 ? movies : []).map((movie, i) => {
+      const dot = el("button", "hero-dot");
+      dot.type = "button";
+      dot.dataset.slide = i;
+      dot.setAttribute("aria-label", `Destaque ${i + 1}: ${movie.title}`);
+      return dot;
+    }),
+  );
+  if (movies.length === 0) hero.querySelector("#hero-content").replaceChildren();
+}
+
+// Mostra o destaque número "index": troca a imagem (com fade) e o texto
+export function showHeroSlide(hero, movies, index) {
+  const movie = movies[index];
+  hero.querySelectorAll(".hero-backdrop").forEach((img, i) => img.classList.toggle("is-active", i === index));
+  hero.querySelectorAll(".hero-dot").forEach((dot, i) => dot.setAttribute("aria-current", String(i === index)));
+
+  const title = el("h2", "hero-title", movie.title);
+  const meta = el("p", "hero-meta");
+  if (movie.vote_count) meta.append(el("span", "hero-rating", `★ ${formatRating(movie.vote_average, movie.vote_count)}`));
+  const year = formatYear(movie.release_date);
+  if (year) meta.append(el("span", "", year));
+  const overview = el("p", "hero-overview", movie.overview || "Sinopse não disponível em português.");
+
+  const actions = el("div", "hero-actions");
+  const more = el("button", "btn btn-primary");
+  more.type = "button";
+  more.dataset.movieId = movie.id;
+  more.append(icon("info"), "Ver detalhes");
+  actions.append(more);
+
+  hero.querySelector("#hero-content").replaceChildren(title, meta, overview, actions);
 }
 
 const COLLAPSED_PROVIDERS = 8;
@@ -105,16 +172,30 @@ function openModal(modal) {
 }
 
 export function showDetailsLoading(modal) {
-  detailsBody(modal).replaceChildren(el("p", "muted", "Carregando..."));
+  const status = el("div", "details-status");
+  status.append(el("p", "muted", "Carregando..."));
+  detailsBody(modal).replaceChildren(status);
   openModal(modal);
 }
 
 export function showDetailsError(modal) {
-  detailsBody(modal).replaceChildren(el("p", "details-error", "Não foi possível carregar os detalhes."));
+  const status = el("div", "details-status");
+  status.append(el("p", "details-error", "Não foi possível carregar os detalhes."));
+  detailsBody(modal).replaceChildren(status);
   openModal(modal);
 }
 
 export function openDetails(modal, details) {
+  // Faixa larga no topo com a imagem de fundo do filme
+  const top = el("div", "details-hero");
+  const backdrop = posterUrl(details.backdropPath, "w1280");
+  if (backdrop) {
+    const img = el("img", "details-backdrop");
+    img.src = backdrop;
+    img.alt = "";
+    top.append(img);
+  }
+
   const layout = el("div", "details-layout");
 
   const src = posterUrl(details.posterPath);
@@ -160,7 +241,8 @@ export function openDetails(modal, details) {
   }
 
   if (details.trailerUrl) {
-    const link = el("a", "details-trailer", "▶ Ver trailer no YouTube");
+    const link = el("a", "btn btn-primary");
+    link.append(icon("play"), "Ver trailer no YouTube");
     link.href = details.trailerUrl;
     link.target = "_blank";
     link.rel = "noopener";
@@ -168,7 +250,8 @@ export function openDetails(modal, details) {
   }
 
   layout.append(info);
-  detailsBody(modal).replaceChildren(layout);
+  detailsBody(modal).replaceChildren(top, layout);
+  modal.scrollTop = 0;
   openModal(modal);
 }
 
