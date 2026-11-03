@@ -10,6 +10,7 @@ export function createState() {
     totalPages: 0,
     totalResults: 0,
     movies: [],
+    aba: "catalogo", // "catalogo" | "quero" | "assisti"
   };
 }
 
@@ -40,6 +41,11 @@ export function setMinRating(state, minRating) {
 
 export function clearFilters(state) {
   return restart(state, { selectedProviders: [], selectedGenres: [], minRating: 0 });
+}
+
+// Trocar de aba não mexe nos filtros: voltar ao Catálogo mostra o que já estava lá
+export function setAba(state, aba) {
+  return { ...state, aba };
 }
 
 export function nextPage(state) {

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   createState, toggleProvider, toggleGenre, setSort, setMinRating, clearFilters,
-  nextPage, applyResults, hasMore, createRequestCounter,
+  nextPage, applyResults, hasMore, createRequestCounter, setAba,
 } from "../js/state.js";
 
 test("toggleProvider adiciona e remove", () => {
@@ -99,4 +99,14 @@ test("setMinRating guarda a nota e volta à página 1", () => {
 
 test("clearFilters também zera a nota mínima", () => {
   assert.equal(clearFilters({ ...createState(), minRating: 8 }).minRating, 0);
+});
+
+test("setAba troca a aba sem perder filtros nem filmes", () => {
+  const s = { ...createState(), selectedGenres: [28], page: 3, movies: [{ id: 1 }] };
+  const next = setAba(s, "quero");
+  assert.equal(next.aba, "quero");
+  assert.deepEqual(next.selectedGenres, [28]);
+  assert.equal(next.page, 3);
+  assert.deepEqual(next.movies, [{ id: 1 }]);
+  assert.equal(createState().aba, "catalogo");
 });

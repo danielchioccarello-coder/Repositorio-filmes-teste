@@ -859,14 +859,6 @@ main {
     width: 100%;
   }
 
-  .conta-email {
-    display: none;
-  }
-
-  .login {
-    width: 100%;
-    max-width: 100%;
-  }
 
   .grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -1120,4 +1112,16 @@ main {
 
 .login-troca {
   align-self: center;
+}
+
+@media (max-width: 700px) {
+  .conta-email {
+    display: none;
+  }
+
+  /* As três abas cabem lado a lado na largura de um celular */
+  .aba {
+    padding: 8px 13px;
+    font-size: 0.88rem;
+  }
 }
