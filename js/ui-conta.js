@@ -44,11 +44,23 @@ export function renderAbas(container, aba) {
   );
 }
 
-// modo: "entrar" | "criar" | "nao_configurado" (sem Supabase no config.js)
+// Avisos no lugar do formulário quando o login não pode ser usado
+const AVISOS = {
+  nao_configurado: "Login ainda não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY em js/config.js.",
+  falha: "Não deu para carregar o login. Verifique a internet e recarregue a página.",
+  carregando: "Carregando o login… tente de novo em um instante.",
+};
+
+export function avisoLogin(modo) {
+  return AVISOS[modo];
+}
+
+// modo: "entrar" | "criar" | "nao_configurado" (sem Supabase no config.js) | "falha" (biblioteca não baixou)
+// | "carregando" (biblioteca ainda baixando)
 export function abrirLogin(dialog, modo) {
   const form = dialog.querySelector(".login-form");
   const aviso = dialog.querySelector(".login-aviso");
-  const configurado = modo !== "nao_configurado";
+  const configurado = !AVISOS[modo];
   form.hidden = !configurado;
   aviso.hidden = configurado;
   dialog.dataset.modo = modo;
@@ -63,7 +75,7 @@ export function abrirLogin(dialog, modo) {
     form.senha.value = "";
   } else {
     dialog.querySelector(".login-titulo").textContent = "Entrar";
-    aviso.textContent = "Login ainda não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY em js/config.js.";
+    aviso.textContent = avisoLogin(modo);
   }
   mostrarErroLogin(dialog, "");
   setLoginEnviando(dialog, false);
@@ -73,7 +85,7 @@ export function abrirLogin(dialog, modo) {
 
 export function setLoginEnviando(dialog, enviando) {
   const modo = dialog.dataset.modo;
-  if (modo === "nao_configurado") return;
+  if (AVISOS[modo]) return;
   const botao = dialog.querySelector(".login-enviar");
   botao.disabled = enviando;
   botao.textContent = enviando ? textosLogin(modo).enviando : textosLogin(modo).botao;

@@ -35,6 +35,8 @@ const counter = createRequestCounter();
 const detailsCounter = createRequestCounter();
 // null quando o Supabase não está configurado (ou enquanto a biblioteca baixa): o site fica só com o catálogo
 let client = null;
+// Aviso do "Entrar" enquanto não há client: "carregando" | "nao_configurado" | "falha"
+let loginStatus = "carregando";
 const listasCounter = createRequestCounter();
 
 const els = {
@@ -397,7 +399,7 @@ function changeUser(novo) {
 
 function openLogin() {
   modoLogin = "entrar";
-  abrirLogin(els.login, client ? "entrar" : "nao_configurado");
+  abrirLogin(els.login, client ? "entrar" : loginStatus);
 }
 
 els.conta.addEventListener("click", async (event) => {
@@ -430,6 +432,7 @@ els.loginForm.addEventListener("submit", async (event) => {
 });
 
 els.login.querySelector(".login-troca").addEventListener("click", () => {
+  if (!client) return;
   modoLogin = modoLogin === "entrar" ? "criar" : "entrar";
   abrirLogin(els.login, modoLogin);
 });
@@ -505,7 +508,14 @@ async function start() {
 start();
 
 // O login carrega em paralelo: se a biblioteca do Supabase demorar, o catálogo não espera
-criarCliente().then((c) => {
-  client = c;
-  if (client) aoMudarSessao(client, changeUser);
-});
+criarCliente().then(
+  (c) => {
+    client = c;
+    loginStatus = "nao_configurado"; // só vale quando client é null
+    if (client) aoMudarSessao(client, changeUser);
+  },
+  (error) => {
+    console.error(error);
+    loginStatus = "falha";
+  },
+);
