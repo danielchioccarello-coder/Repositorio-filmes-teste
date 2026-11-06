@@ -79,7 +79,7 @@ A função usa o formato Web da Vercel (`export async function GET(request)` dev
 ## 6. Antes de enviar ao GitHub
 
 - Confirmar que `js/config.js` nunca entrou em nenhum commit: `git log --all --oneline -- js/config.js` não lista nada.
-- Confirmar que o token do TMDB não aparece em nenhum arquivo versionado: buscar o começo do token (`eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZWU1`) em `git grep` de todo o histórico não encontra nada.
+- Confirmar que o token do TMDB não aparece em nenhum arquivo versionado: buscar o token completo (lido de `js/config.js`, sem imprimi-lo) com `git grep` em todos os commits não encontra nada.
 
 ## 7. Passos manuais (guiados, feitos pelo Daniel)
 
