@@ -16,7 +16,7 @@ test("textosLogin do modo criar", () => {
 });
 
 test("avisoLogin explica login não configurado e falha ao carregar", () => {
-  assert.equal(avisoLogin("nao_configurado"), "Login ainda não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY em js/config.js.");
+  assert.equal(avisoLogin("nao_configurado"), "Login ainda não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY em js/config.publico.js.");
   assert.equal(avisoLogin("falha"), "Não deu para carregar o login. Verifique a internet e recarregue a página.");
 });
 

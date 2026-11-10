@@ -8,6 +8,7 @@ Site que mostra os filmes inclusos na assinatura dos serviços de streaming no B
 2. Acesse [Configurações → API](https://www.themoviedb.org/settings/api) e copie o **Token de Leitura da API** (*API Read Access Token*).
 3. Copie o arquivo `js/config.example.js` para `js/config.js` e cole o token entre as aspas.
    O `js/config.js` fica fora do git, então sua chave não vai parar no repositório.
+   Ele só é usado no seu computador: no site publicado a chave fica na Vercel (veja abaixo).
 
 ## Login e listas (Supabase)
 
@@ -16,7 +17,8 @@ Opcional: sem isso, o site funciona só como catálogo.
 1. Crie uma conta em [supabase.com](https://supabase.com) e um projeto novo (o plano gratuito basta).
 2. Abra **SQL Editor**, cole o conteúdo de `supabase/schema.sql` e clique em **Run**.
 3. Em **Authentication → Sign In / Providers → Email**, desligue **"Confirm email"**.
-4. Em **Project Settings → API**, copie o **Project URL** e a chave **anon / public** para `SUPABASE_URL` e `SUPABASE_ANON_KEY` no `js/config.js`.
+4. Em **Project Settings → API**, copie o **Project URL** e a chave **publishable** (ou **anon / public**) para `SUPABASE_URL` e `SUPABASE_ANON_KEY` no `js/config.publico.js`.
+   Esses dados são públicos e vão para o GitHub; quem protege as listas são as regras de segurança do `supabase/schema.sql`. **Nunca** use a chave *secret* ou *service_role*.
 
 > No plano gratuito, projetos sem uso por 7 dias são pausados. Para voltar, clique em **Restore** no painel do Supabase.
 
@@ -27,6 +29,16 @@ Opcional: sem isso, o site funciona só como catálogo.
 3. Clique em **Go Live**, no canto inferior direito. O site abre no navegador.
 
 > O site usa módulos JavaScript, que não funcionam abrindo o `index.html` com duplo clique. Use o Live Server.
+
+## Publicar na Vercel
+
+O site publicado não usa o `js/config.js`: ele pede os filmes ao intermediário `/api/tmdb` (arquivo `api/tmdb.js`), que roda na Vercel e guarda a chave do TMDB escondida.
+
+1. **GitHub:** crie um repositório e envie o projeto (`git push`).
+2. **Vercel:** entre em [vercel.com](https://vercel.com) com a conta do GitHub → **Add New → Project** → importe o repositório → **Framework Preset: Other**, sem comando de build → em **Environment Variables** crie `TMDB_TOKEN` com o seu token → **Deploy**.
+3. **Supabase:** em **Authentication → URL Configuration**, coloque o endereço da Vercel em **Site URL** e mantenha `http://127.0.0.1:5500/**` em **Redirect URLs** para o uso local.
+
+Depois disso, cada `git push` atualiza o site publicado sozinho.
 
 ## Testes
 

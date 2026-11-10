@@ -33,9 +33,9 @@ export async function conectar(config, carregar = (url) => import(url), espera =
 export async function criarCliente() {
   let config;
   try {
-    config = await import("./config.js");
+    config = await import("./config.publico.js");
   } catch {
-    // Sem js/config.js o catálogo já avisa; o login só fica desligado
+    // Sem js/config.publico.js o login só fica desligado
     return null;
   }
   return conectar(config);

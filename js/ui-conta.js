@@ -46,7 +46,7 @@ export function renderAbas(container, aba) {
 
 // Avisos no lugar do formulário quando o login não pode ser usado
 const AVISOS = {
-  nao_configurado: "Login ainda não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY em js/config.js.",
+  nao_configurado: "Login ainda não configurado. Preencha SUPABASE_URL e SUPABASE_ANON_KEY em js/config.publico.js.",
   falha: "Não deu para carregar o login. Verifique a internet e recarregue a página.",
   carregando: "Carregando o login… tente de novo em um instante.",
 };
@@ -55,7 +55,7 @@ export function avisoLogin(modo) {
   return AVISOS[modo];
 }
 
-// modo: "entrar" | "criar" | "nao_configurado" (sem Supabase no config.js) | "falha" (biblioteca não baixou)
+// modo: "entrar" | "criar" | "nao_configurado" (sem Supabase no config.publico.js) | "falha" (biblioteca não baixou)
 // | "carregando" (biblioteca ainda baixando)
 export function abrirLogin(dialog, modo) {
   const form = dialog.querySelector(".login-form");
