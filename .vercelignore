@@ -1,0 +1,4 @@
+# Nunca enviar à Vercel (mesmo se alguém publicar pela linha de comando em vez do GitHub)
+js/config.js
+.env*
+.superpowers/

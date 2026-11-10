@@ -10,10 +10,22 @@ const CAMINHOS = [
   { regra: /^\/movie\/\d+$/, cache: 3600 },
 ];
 
-const PARAMETROS = [
-  "language", "watch_region", "with_watch_monetization_types", "with_watch_providers", "with_genres",
-  "sort_by", "page", "vote_count.gte", "vote_average.gte", "append_to_response", "include_video_language",
-];
+const QUALQUER = () => true;
+
+// Parâmetro → regra do valor. Os que podem pedir dados extras ao TMDB só aceitam exatamente o que o site usa.
+const PARAMETROS = {
+  language: QUALQUER,
+  watch_region: QUALQUER,
+  with_watch_monetization_types: QUALQUER,
+  with_watch_providers: QUALQUER,
+  with_genres: QUALQUER,
+  sort_by: QUALQUER,
+  "vote_count.gte": QUALQUER,
+  "vote_average.gte": QUALQUER,
+  page: (v) => /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 500,
+  append_to_response: (v) => v === "credits,videos,watch/providers",
+  include_video_language: (v) => v === "pt,en,null",
+};
 
 function json(corpo, status, cache = "no-store") {
   return new Response(JSON.stringify(corpo), {
@@ -40,8 +52,9 @@ export function criarHandler({ token, fetchFn }) {
     if (!chave) return falha();
 
     const saida = new URLSearchParams();
-    for (const nome of PARAMETROS) {
-      if (entrada.has(nome)) saida.set(nome, entrada.get(nome));
+    for (const [nome, valido] of Object.entries(PARAMETROS)) {
+      const valor = entrada.get(nome);
+      if (valor !== null && valido(valor)) saida.set(nome, valor);
     }
 
     let resposta;

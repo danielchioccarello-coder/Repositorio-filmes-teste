@@ -47,13 +47,36 @@ test("parâmetros desconhecidos são descartados", async () => {
   assert.equal(params.has("caminho"), false);
 });
 
-test("todos os parâmetros permitidos são repassados", async () => {
+// page, append_to_response e include_video_language têm regras próprias (testes abaixo)
+test("todos os parâmetros livres são repassados", async () => {
   const nomes = ["language", "watch_region", "with_watch_monetization_types", "with_watch_providers", "with_genres",
-    "sort_by", "page", "vote_count.gte", "vote_average.gte", "append_to_response", "include_video_language"];
+    "sort_by", "vote_count.gte", "vote_average.gte"];
   const f = fakeFetch();
   const query = nomes.map((n) => `${n}=v`).join("&");
   await criarHandler({ token: "abc", fetchFn: f })(pedido(`caminho=/discover/movie&${query}`));
   for (const n of nomes) assert.equal(f.calls[0].url.searchParams.get(n), "v", n);
+});
+
+test("extras dos detalhes só com os valores que o site usa", async () => {
+  const f = fakeFetch();
+  const handler = criarHandler({ token: "abc", fetchFn: f });
+  await handler(pedido("caminho=/movie/550&append_to_response=credits,videos,watch/providers&include_video_language=pt,en,null"));
+  assert.equal(f.calls[0].url.searchParams.get("append_to_response"), "credits,videos,watch/providers");
+  assert.equal(f.calls[0].url.searchParams.get("include_video_language"), "pt,en,null");
+  await handler(pedido("caminho=/movie/550&append_to_response=images,reviews,similar&include_video_language=de"));
+  assert.equal(f.calls[1].url.searchParams.has("append_to_response"), false);
+  assert.equal(f.calls[1].url.searchParams.has("include_video_language"), false);
+});
+
+test("página só de 1 a 500", async () => {
+  const f = fakeFetch();
+  const handler = criarHandler({ token: "abc", fetchFn: f });
+  for (const page of ["0", "501", "abc", "1.5", "-1"]) {
+    await handler(pedido(`caminho=/discover/movie&page=${page}`));
+    assert.equal(f.calls.at(-1).url.searchParams.has("page"), false, page);
+  }
+  await handler(pedido("caminho=/discover/movie&page=500"));
+  assert.equal(f.calls.at(-1).url.searchParams.get("page"), "500");
 });
 
 test("parâmetro repetido usa o primeiro valor", async () => {
