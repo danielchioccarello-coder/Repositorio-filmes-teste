@@ -66,23 +66,34 @@ export function extractDetails(raw) {
 export function createApi(token, fetchFn = globalThis.fetch) {
   const cleanToken = (token ?? "").trim();
 
-  async function request(path, params = new URLSearchParams()) {
-    if (!cleanToken) {
-      throw new ApiError("chave_invalida", "Token do TMDB não configurado");
+  // Com a chave local (js/config.js) fala direto com o TMDB.
+  // Sem ela (site publicado) usa o intermediário /api/tmdb, que guarda a chave no servidor.
+  function montarPedido(path, params) {
+    if (cleanToken) {
+      return {
+        url: `${API_BASE}${path}?${params}`,
+        headers: { Authorization: `Bearer ${cleanToken}`, accept: "application/json" },
+      };
     }
+    const query = new URLSearchParams({ caminho: path });
+    for (const [nome, valor] of params) query.append(nome, valor);
+    return { url: `/api/tmdb?${query}`, headers: { accept: "application/json" } };
+  }
+
+  async function request(path, params = new URLSearchParams()) {
     if (!params.has("language")) params.set("language", "pt-BR");
+    const { url, headers } = montarPedido(path, params);
 
     let response;
     try {
-      response = await fetchFn(`${API_BASE}${path}?${params}`, {
-        headers: { Authorization: `Bearer ${cleanToken}`, accept: "application/json" },
-      });
+      response = await fetchFn(url, { headers });
     } catch (error) {
       throw new ApiError("rede", error.message);
     }
 
-    if (response.status === 401) {
-      throw new ApiError("chave_invalida", "Token do TMDB inválido", 401);
+    // Com chave: 401 = chave errada. Sem chave: 404 = não há intermediário (computador sem js/config.js)
+    if (cleanToken ? response.status === 401 : response.status === 404) {
+      throw new ApiError("chave_invalida", "Token do TMDB ausente ou inválido", response.status);
     }
     if (!response.ok) {
       throw new ApiError("outro", `Erro do TMDB: HTTP ${response.status}`, response.status);

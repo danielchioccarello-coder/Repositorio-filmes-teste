@@ -129,10 +129,38 @@ test("createApi envia Bearer token", async () => {
   assert.ok(f.calls[0].url.startsWith("https://api.themoviedb.org/3/discover/movie?"));
 });
 
-test("token vazio ou só espaços lança chave_invalida sem chamar fetch", async () => {
-  const f = fakeFetch();
-  await assert.rejects(createApi("   ", f).discoverMovies(base), (e) => e instanceof ApiError && e.type === "chave_invalida");
-  assert.equal(f.calls.length, 0);
+test("token vazio usa o intermediário", async () => {
+  const f = fakeFetch({ results: [] });
+  await createApi("   ", f).discoverMovies(base);
+  assert.ok(f.calls[0].url.startsWith("/api/tmdb?"));
+  const url = new URL(f.calls[0].url, "https://site.test");
+  assert.equal(url.searchParams.get("caminho"), "/discover/movie");
+  assert.equal(url.searchParams.get("watch_region"), "BR");
+  assert.equal(f.calls[0].options.headers.Authorization, undefined);
+});
+
+test("intermediário 404 vira chave_invalida", async () => {
+  const f = fakeFetch({}, { ok: false, status: 404 });
+  await assert.rejects(createApi("", f).discoverMovies(base), (e) => e instanceof ApiError && e.type === "chave_invalida");
+});
+
+test("intermediário 502 vira outro", async () => {
+  const f = fakeFetch({}, { ok: false, status: 502 });
+  await assert.rejects(createApi("", f).discoverMovies(base), (e) => e.type === "outro" && e.status === 502);
+});
+
+test("sem token, falha de rede vira rede", async () => {
+  const f = async () => { throw new TypeError("Failed to fetch"); };
+  await assert.rejects(createApi("", f).discoverMovies(base), (e) => e.type === "rede");
+});
+
+test("getMovieDetails sem token passa caminho /movie/550 e append_to_response", async () => {
+  const f = fakeFetch(rawDetails());
+  await createApi("", f).getMovieDetails(550);
+  const url = new URL(f.calls[0].url, "https://site.test");
+  assert.equal(url.pathname, "/api/tmdb");
+  assert.equal(url.searchParams.get("caminho"), "/movie/550");
+  assert.equal(url.searchParams.get("append_to_response"), "credits,videos,watch/providers");
 });
 
 test("token com espaços nas pontas é aparado", async () => {
